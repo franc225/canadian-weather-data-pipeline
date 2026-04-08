@@ -21,9 +21,11 @@ Python ingestion
       ↓
 Parquet data lake (raw)
       ↓
+DuckDB warehouse
+      ↓
 dbt staging models
       ↓
-dbt dimensional model
+dbt dimensional model (star schema)
       ↓
 Analytics / dashboards / forecasting
 ```
@@ -65,6 +67,25 @@ I --> E
 | Orchestration | Apache Airflow |
 | Validation | dbt tests + Python tests |
 | Analytics | Power BI / Python |
+
+---
+
+# Environment Variables
+
+The project uses environment variables to support execution in different environments:
+
+- Windows
+- WSL / Linux
+- Airflow
+
+The DuckDB path used by dbt is configured using the variable:
+
+```text
+DBT_DUCKDB_PATH
+$env:DBT_DUCKDB_PATH="C:\dev\canadian-weather-data-pipeline\data\warehouse\weather.duckdb"
+```
+
+This allows the same profiles.yml configuration to work in all environments.
 
 ---
 
@@ -196,6 +217,10 @@ erDiagram
     dim_date ||--o{ fct_weather_hourly : date_key
 ```
 
+The fact table `fct_weather_hourly` is implemented as an **incremental dbt model**.
+
+This allows the pipeline to efficiently process new weather data while updating recent forecasts when predictions change.
+
 ---
 
 # Airflow
@@ -250,6 +275,32 @@ http://localhost:8080
 or manually via CLI:
 
 airflow dags trigger weather_pipeline
+
+## Running Airflow (Windows)
+
+Apache Airflow runs in a Linux environment.  
+On Windows, the recommended approach is to use **WSL2 (Windows Subsystem for Linux)**.
+
+Open PowerShell and run:
+
+```powershell
+wsl --install
+wsl --install -d Ubuntu-22.04
+```
+
+Restart Windows if required.
+
+```powershell
+wsl
+cd /mnt/c/dev/canadian-weather-data-pipeline
+source airflow_venv/bin/activate
+export AIRFLOW_HOME=~/airflow
+airflow standalone
+```
+
+Open in a browser: http://localhost:8080
+
+Enable the DAG weather_pipeline and click Trigger DAG
 
 ---
 
@@ -331,7 +382,6 @@ Roadmap
 
 Planned improvements:
 
-- incremental dbt models
 - weather analytics dashboard
-- demand forecasting model
-- data quality monitoring
+- forecasting model for weather trends
+- automated data quality monitoring
