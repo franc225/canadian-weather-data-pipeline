@@ -6,7 +6,9 @@ from airflow.operators.bash import BashOperator
 
 PROJECT_DIR = "/mnt/c/dev/canadian-weather-data-pipeline"
 PYTHON_BIN = f"{PROJECT_DIR}/airflow_venv/bin/python"
+DBT_BIN = f"{PROJECT_DIR}/airflow_venv/bin/dbt"
 DBT_DIR = f"{PROJECT_DIR}/dbt_weather"
+DUCKDB_PATH = f"{PROJECT_DIR}/data/warehouse/weather.duckdb"
 
 with DAG(
     dag_id="weather_pipeline",
@@ -35,10 +37,8 @@ with DAG(
 
     dbt_build = BashOperator(
         task_id="dbt_build",
-        bash_command=(
-            f"cd {DBT_DIR} && "
-            f"{PROJECT_DIR}/airflow_venv/bin/dbt build --profiles-dir ."
-        ),
+        env={"DBT_DUCKDB_PATH": DUCKDB_PATH},
+        bash_command=f"cd {DBT_DIR} && {DBT_BIN} build --profiles-dir .",
     )
 
     ingest_weather_api >> load_duckdb >> dbt_build

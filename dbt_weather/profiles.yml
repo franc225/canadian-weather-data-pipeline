@@ -10,6 +10,6 @@ weather_pipeline:
   outputs:
     dev:
       type: duckdb
-      path: /mnt/c/dev/canadian-weather-data-pipeline/data/warehouse/weather.duckdb
+      path: "{{ env_var('DBT_DUCKDB_PATH') }}"
       threads: 4
       schema: main
