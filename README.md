@@ -16,16 +16,32 @@ The project demonstrates how to build a small **data platform locally** using Py
 
 ```text
 Open-Meteo API
-↓
+      ↓
 Python ingestion
-↓
+      ↓
 Parquet data lake (raw)
-↓
-DuckDB warehouse (raw_weather table)
-↓
-dbt transformations
-↓
+      ↓
+dbt staging models
+      ↓
+dbt dimensional model
+      ↓
 Analytics / dashboards / forecasting
+```
+
+## Pipeline Overview
+
+```mermaid
+flowchart LR
+    A[Open-Meteo API] --> B[Python ingestion<br/>ingest_weather_api.py]
+    B --> C[Parquet raw layer<br/>data/raw/weather/*.parquet]
+    C --> D[DuckDB warehouse<br/>raw_weather]
+    D --> E[dbt staging<br/>stg_weather_hourly]
+    E --> F[dbt marts<br/>dim_city]
+    E --> G[dbt marts<br/>dim_date]
+    E --> H[dbt marts<br/>fct_weather_hourly]
+    F --> I[Analytics / BI / Forecasting]
+    G --> I
+    H --> I
 ```
 
 ---
@@ -60,6 +76,20 @@ canadian-weather-data-pipeline
 │ ├─ config.py
 │ ├─ ingest_weather_api.py
 │ └─ load_duckdb.py
+│
+├─ dbt_weather
+│  ├─ models
+│  │  ├─ staging
+│  │  │   ├─ stg_weather_hourly.sql
+│  │  │   └─ staging.yml
+│  │  │
+│  │  └─ marts
+│  │      ├─ dim_city.sql
+│  │      ├─ dim_date.sql
+│  │      ├─ fct_weather_hourly.sql
+│  │      └─ marts.yml
+│  │
+│  └─ dbt_project.yml
 │
 ├─ test
 │ └─ check_ingestion.py
@@ -98,6 +128,63 @@ Variables collected:
 
 ---
 
+# Data Model
+
+The analytical layer uses a **star schema** built with dbt.
+
+## Dimension Tables
+
+| Table | Description |
+|------|-------------|
+| `dim_city` | List of cities with geographic metadata (city, province, latitude, longitude) |
+| `dim_date` | Calendar dimension used for time-based analysis |
+
+## Fact Table
+
+| Table | Description |
+|------|-------------|
+| `fct_weather_hourly` | Hourly weather observations including temperature, humidity, precipitation and wind speed |
+
+## Star Schema
+
+```mermaid
+erDiagram
+
+    dim_city {
+        INT city_id PK
+        VARCHAR city
+        VARCHAR province
+        DOUBLE latitude
+        DOUBLE longitude
+    }
+
+    dim_date {
+        DATE date_key PK
+        INT year_number
+        INT month_number
+        INT day_number
+    }
+
+    fct_weather_hourly {
+        VARCHAR weather_key PK
+        INT city_id FK
+        DATE date_key FK
+        TIMESTAMP observed_at
+        DOUBLE temperature_c
+        INT relative_humidity_pct
+        DOUBLE precipitation_mm
+        DOUBLE surface_pressure_hpa
+        DOUBLE wind_speed_kmh
+        INT weather_code
+        TIMESTAMP ingested_at_utc
+    }
+
+    dim_city ||--o{ fct_weather_hourly : city_id
+    dim_date ||--o{ fct_weather_hourly : date_key
+```
+
+---
+
 # Example Pipeline Run
 
 Step 1 — API ingestion
@@ -133,6 +220,15 @@ FROM raw_weather
 ORDER BY city, time
 LIMIT 10;
 
+Step 3 — dbt transformations
+
+Running dbt builds the dimensional model:
+
+stg_weather_hourly
+dim_city
+dim_date
+fct_weather_hourly
+
 ---
 
 # Tests
@@ -151,6 +247,14 @@ parquet dataset creation
 successful DuckDB load
 dataset schema integrity
 
+dbt tests
+
+Examples:
+
+uniqueness tests
+not-null constraints
+referential integrity between fact and dimension tables
+
 ---
 
 # Roadmap
@@ -159,9 +263,7 @@ Roadmap
 
 Planned improvements:
 
-- staging layer for weather data
-- dbt transformations
-- dimensional model (star schema)
 - Airflow orchestration
+- incremental dbt models
 - weather analytics dashboard
-- forecasting model
+- demand forecasting model
