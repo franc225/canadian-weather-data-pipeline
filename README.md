@@ -4,6 +4,7 @@
 ![DuckDB](https://img.shields.io/badge/database-duckdb-yellow)
 ![dbt](https://img.shields.io/badge/transform-dbt-orange)
 ![Airflow](https://img.shields.io/badge/orchestration-airflow-red)
+![status](https://img.shields.io/badge/status-in%20progress-blue)
 
 End-to-end **data engineering pipeline** that ingests weather data from a public API and builds an analytical dataset using a modern data stack.
 
@@ -20,7 +21,7 @@ Python ingestion
 ↓
 Parquet data lake (raw)
 ↓
-DuckDB warehouse
+DuckDB warehouse (raw_weather table)
 ↓
 dbt transformations
 ↓
@@ -51,7 +52,9 @@ canadian-weather-data-pipeline
 ├─ data
 │ ├─ raw
 │ │ └─ weather
+│ │      └─ weather_hourly_YYYYMMDDTHHMMSS.parquet
 │ └─ warehouse
+│     └─ weather.duckdb
 │
 ├─ src
 │ ├─ config.py
@@ -60,6 +63,7 @@ canadian-weather-data-pipeline
 │
 ├─ test
 │ └─ check_ingestion.py
+│ └─ check_duckdb_load.py
 │
 ├─ notebooks
 │
@@ -96,41 +100,68 @@ Variables collected:
 
 # Example Pipeline Run
 
-Running the ingestion script generates a Parquet dataset:
+Step 1 — API ingestion
+
+Running the ingestion script generates a raw dataset stored in Parquet.
+
+Example file:
 
 data/raw/weather/weather_hourly_20260408T142500Z.parquet
 
-Example data:
+Example rows:
 
-| city | time | temperature | precipitation |
-|----|----|----|----|
-| Montreal | 2026-04-08 10:00 | 4.5 | 0.0 |
-| Montreal | 2026-04-08 11:00 | 5.1 | 0.0 |
+city	time	temperature	precipitation
+Montreal	2026-04-08 10:00	4.5	0.0
+Montreal	2026-04-08 11:00	5.1	0.0
+
+Step 2 — Load into DuckDB
+
+The raw Parquet files are loaded into a local DuckDB database.
+
+Database file:
+
+data/warehouse/weather.duckdb
+
+Main table created:
+
+raw_weather
+
+Example query:
+
+SELECT city, time, temperature_2m, precipitation
+FROM raw_weather
+ORDER BY city, time
+LIMIT 10;
 
 ---
 
 # Tests
 
-The project includes validation tests for ingestion.
+The project includes validation tests.
 
-Example:
+Example tests:
 
 test/check_ingestion.py
+test/check_duckdb_load.py
 
 Tests verify:
 
-- API response structure
-- dataset creation
-- parquet schema integrity
+API response structure
+parquet dataset creation
+successful DuckDB load
+dataset schema integrity
 
 ---
 
 # Roadmap
 
+Roadmap
+
 Planned improvements:
 
-- DuckDB warehouse layer
+- staging layer for weather data
 - dbt transformations
+- dimensional model (star schema)
 - Airflow orchestration
-- Weather analytics dashboard
-- Forecasting model
+- weather analytics dashboard
+- forecasting model
