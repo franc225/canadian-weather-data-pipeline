@@ -4,3 +4,4 @@ __pycache__/
 *.duckdb
 .env
 .ipynb_checkpoints
+.venv-1/
