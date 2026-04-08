@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, UTC
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -41,7 +41,7 @@ def fetch_weather(city: dict[str, Any]) -> pd.DataFrame:
     df["longitude"] = city["longitude"]
 
     # Horodatage technique d'ingestion
-    ingested_at_utc = datetime.now(UTC).replace(microsecond=0).isoformat()
+    ingested_at_utc = datetime.now(timezone.utc).replace(microsecond=0).isoformat()
     df["ingested_at_utc"] = ingested_at_utc
 
     # Conversion de la colonne temps
@@ -77,7 +77,7 @@ def save_parquet(df: pd.DataFrame, output_dir: Path) -> Path:
     """
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    run_ts = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
+    run_ts = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     output_path = output_dir / f"weather_hourly_{run_ts}.parquet"
 
     df.to_parquet(output_path, index=False)

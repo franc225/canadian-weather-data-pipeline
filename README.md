@@ -32,16 +32,23 @@ Analytics / dashboards / forecasting
 
 ```mermaid
 flowchart LR
-    A[Open-Meteo API] --> B[Python ingestion<br/>ingest_weather_api.py]
-    B --> C[Parquet raw layer<br/>data/raw/weather/*.parquet]
-    C --> D[DuckDB warehouse<br/>raw_weather]
-    D --> E[dbt staging<br/>stg_weather_hourly]
-    E --> F[dbt marts<br/>dim_city]
-    E --> G[dbt marts<br/>dim_date]
-    E --> H[dbt marts<br/>fct_weather_hourly]
-    F --> I[Analytics / BI / Forecasting]
-    G --> I
-    H --> I
+
+A[Open-Meteo API] --> B[Python ingestion]
+B --> C[Parquet data lake<br/>data/raw/weather]
+C --> D[DuckDB warehouse<br/>raw_weather]
+D --> E[dbt staging<br/>stg_weather_hourly]
+E --> F[dbt star schema<br/>dim_city / dim_date]
+E --> G[fct_weather_hourly]
+F --> H[Analytics / Forecasting]
+G --> H
+
+subgraph Orchestration
+I[Apache Airflow DAG]
+end
+
+I --> B
+I --> D
+I --> E
 ```
 
 ---
@@ -49,14 +56,15 @@ flowchart LR
 # Stack
 
 | Layer | Technology |
-|-----|-----|
+|------|------------|
 | Ingestion | Python |
 | Data source | Open-Meteo API |
 | Data lake | Parquet |
 | Warehouse | DuckDB |
 | Transformation | dbt |
-| Orchestration | Airflow |
-| Validation | Python tests |
+| Orchestration | Apache Airflow |
+| Validation | dbt tests + Python tests |
+| Analytics | Power BI / Python |
 
 ---
 
@@ -65,17 +73,22 @@ flowchart LR
 ```text
 canadian-weather-data-pipeline
 │
+├─ airflow
+│  └─ dags
+│     └─ weather_pipeline_dag.py
+│
 ├─ data
-│ ├─ raw
-│ │ └─ weather
-│ │      └─ weather_hourly_YYYYMMDDTHHMMSS.parquet
-│ └─ warehouse
+│  ├─ raw
+│  │  └─ weather
+│  │     └─ *.parquet
+│  │
+│  └─ warehouse
 │     └─ weather.duckdb
 │
 ├─ src
-│ ├─ config.py
-│ ├─ ingest_weather_api.py
-│ └─ load_duckdb.py
+│  ├─ config.py
+│  ├─ ingest_weather_api.py
+│  └─ load_duckdb.py
 │
 ├─ dbt_weather
 │  ├─ models
@@ -89,14 +102,14 @@ canadian-weather-data-pipeline
 │  │      ├─ fct_weather_hourly.sql
 │  │      └─ marts.yml
 │  │
-│  └─ dbt_project.yml
+│  ├─ dbt_project.yml
+│  └─ profiles.yml
 │
 ├─ test
-│ └─ check_ingestion.py
-│ └─ check_duckdb_load.py
+│  ├─ check_ingestion.py
+│  └─ check_duckdb_load.py
 │
 ├─ notebooks
-│
 ├─ requirements.txt
 └─ README.md
 ```
@@ -185,6 +198,61 @@ erDiagram
 
 ---
 
+# Airflow
+
+## Workflow Orchestration
+
+The pipeline is orchestrated with **Apache Airflow**.
+
+Airflow executes the pipeline as a Directed Acyclic Graph (DAG) composed of three tasks:
+
+```text
+ingest_weather_api
+        ↓
+load_duckdb
+        ↓
+dbt_build
+```
+
+DAG implementation
+```text
+airflow/
+└── dags/
+    └── weather_pipeline_dag.py
+```
+
+Each task is executed using Airflow BashOperator:
+
+API ingestion
+
+Runs:
+
+python src/ingest_weather_api.py
+
+Warehouse loading
+
+Runs:
+
+python src/load_duckdb.py
+
+Transformation layer
+
+Runs:
+
+dbt build
+
+Running the pipeline
+
+The pipeline can be triggered from the Airflow UI:
+
+http://localhost:8080
+
+or manually via CLI:
+
+airflow dags trigger weather_pipeline
+
+---
+
 # Example Pipeline Run
 
 Step 1 — API ingestion
@@ -263,7 +331,7 @@ Roadmap
 
 Planned improvements:
 
-- Airflow orchestration
 - incremental dbt models
 - weather analytics dashboard
 - demand forecasting model
+- data quality monitoring
