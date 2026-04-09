@@ -35,6 +35,11 @@ with DAG(
         ),
     )
 
+    dbt_deps = BashOperator(
+        task_id="dbt_deps",
+        bash_command=f"cd {DBT_DIR} && {DBT_BIN} deps",
+    )
+
     dbt_build = BashOperator(
         task_id="dbt_build",
         env={"DBT_DUCKDB_PATH": DUCKDB_PATH},

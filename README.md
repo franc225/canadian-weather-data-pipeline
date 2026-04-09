@@ -67,8 +67,8 @@ I --> E
 | Warehouse | DuckDB |
 | Transformation | dbt |
 | Orchestration | Apache Airflow |
-| Validation | dbt tests + Python tests |
-| Analytics | Power BI dashboard / Python analytics
+| Data Quality | dbt tests + Python validation |
+| Analytics | Power BI dashboard / Python |
 
 ---
 
@@ -226,6 +226,13 @@ The fact table `fct_weather_hourly` is implemented as an **incremental dbt model
 
 This allows the pipeline to efficiently process new weather data while updating recent forecasts when predictions change.
 
+The model is validated using dbt data quality tests including:
+
+- uniqueness constraints
+- not-null constraints
+- referential integrity between fact and dimension tables
+- domain validation for meteorological variables (temperature and humidity ranges)
+
 ---
 
 # Airflow
@@ -269,7 +276,7 @@ Transformation layer
 
 Runs:
 
-dbt build
+dbt build (models + data quality tests)
 
 Running the pipeline
 
@@ -357,27 +364,36 @@ fct_weather_hourly
 
 # Tests
 
-The project includes validation tests.
+The project includes multiple layers of validation.
 
-Example tests:
+### Python validation
+
+Example scripts:
 
 test/check_ingestion.py
 test/check_duckdb_load.py
 
-Tests verify:
+These tests verify:
 
-API response structure
-parquet dataset creation
-successful DuckDB load
-dataset schema integrity
+- API response structure
+- parquet dataset creation
+- successful DuckDB load
+- dataset schema integrity
 
-dbt tests
+### dbt data quality tests
 
-Examples:
+dbt tests are executed automatically as part of the pipeline using:
 
-uniqueness tests
-not-null constraints
-referential integrity between fact and dimension tables
+dbt build
+
+Implemented checks include:
+
+- uniqueness constraints
+- not-null constraints
+- referential integrity
+- meteorological domain validation (temperature and humidity ranges)
+
+These tests help ensure data consistency and reliability in the analytical layer.
 
 ---
 
