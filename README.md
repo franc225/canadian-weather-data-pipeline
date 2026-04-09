@@ -6,7 +6,7 @@
 ![Airflow](https://img.shields.io/badge/orchestration-airflow-red)
 ![Power BI](https://img.shields.io/badge/analytics-power%20bi-yellow)
 ![Star Schema](https://img.shields.io/badge/model-star%20schema-blueviolet)
-![status](https://img.shields.io/badge/status-in%20progress-blue)
+![status](https://img.shields.io/badge/status-completed-green)
 
 End-to-end **data engineering pipeline** that ingests weather data from a public API and builds an analytical dataset using a modern data stack.
 
@@ -418,11 +418,51 @@ This layer demonstrates how the data engineering pipeline feeds a BI tool for an
 
 ---
 
-# Roadmap
+# Data Engineering Concepts Demonstrated
 
-Roadmap
+This project demonstrates several core data engineering practices:
 
-Planned improvements:
+- API data ingestion
+- Parquet-based data lake
+- DuckDB analytical warehouse
+- dimensional modeling (star schema)
+- incremental transformations with dbt
+- data quality testing
+- workflow orchestration with Airflow
+- analytics integration with Power BI
 
-- weather forecasting model
-- automated data quality monitoring
+---
+
+# Pipeline Overview
+
+The pipeline retrieves weather data from the Open-Meteo API and processes it through a modern analytics stack.
+
+1. Python ingests hourly weather data from the API
+2. Data is stored in a Parquet-based raw data lake
+3. The data is loaded into a DuckDB warehouse
+4. dbt transforms the raw data into a star schema
+5. dbt tests validate data quality
+6. Apache Airflow orchestrates the pipeline
+7. Power BI visualizes the analytical dataset
+
+```mermaid
+flowchart TD
+
+API[Open-Meteo API]
+INGEST[Python Ingestion]
+LAKE[Parquet Data Lake]
+WAREHOUSE[DuckDB Warehouse]
+DBT[dbt Transformations]
+TESTS[dbt Data Quality Tests]
+AIRFLOW[Airflow Orchestration]
+BI[Power BI Dashboard]
+
+API --> INGEST
+INGEST --> LAKE
+LAKE --> WAREHOUSE
+WAREHOUSE --> DBT
+DBT --> TESTS
+TESTS --> BI
+AIRFLOW --> INGEST
+AIRFLOW --> DBT
+```
