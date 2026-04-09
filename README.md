@@ -4,6 +4,8 @@
 ![DuckDB](https://img.shields.io/badge/database-duckdb-yellow)
 ![dbt](https://img.shields.io/badge/transform-dbt-orange)
 ![Airflow](https://img.shields.io/badge/orchestration-airflow-red)
+![Power BI](https://img.shields.io/badge/analytics-power%20bi-yellow)
+![Star Schema](https://img.shields.io/badge/model-star%20schema-blueviolet)
 ![status](https://img.shields.io/badge/status-in%20progress-blue)
 
 End-to-end **data engineering pipeline** that ingests weather data from a public API and builds an analytical dataset using a modern data stack.
@@ -27,7 +29,7 @@ dbt staging models
       ↓
 dbt dimensional model (star schema)
       ↓
-Analytics / dashboards / forecasting
+Power BI dashboard / analytics / forecasting
 ```
 
 ## Pipeline Overview
@@ -66,7 +68,7 @@ I --> E
 | Transformation | dbt |
 | Orchestration | Apache Airflow |
 | Validation | dbt tests + Python tests |
-| Analytics | Power BI / Python |
+| Analytics | Power BI dashboard / Python analytics
 
 ---
 
@@ -130,6 +132,9 @@ canadian-weather-data-pipeline
 │  ├─ check_ingestion.py
 │  └─ check_duckdb_load.py
 │
+├─ analytics
+│   └─ weather_dashboard.pbix
+|
 ├─ notebooks
 ├─ requirements.txt
 └─ README.md
@@ -376,12 +381,32 @@ referential integrity between fact and dimension tables
 
 ---
 
+# Analytics Dashboard
+
+The analytical dataset can be explored using a **Power BI dashboard** built on the DuckDB star schema.
+
+Dashboard file:
+
+analytics/weather_dashboard.pbix
+
+![Weather Dashboard](analytics/dashboard_preview.png)
+
+The dashboard connects to the DuckDB warehouse in **read-only mode** and provides visualizations such as:
+
+- hourly temperature trends
+- precipitation by city
+- humidity comparison between cities
+- short-term weather forecast analysis
+
+This layer demonstrates how the data engineering pipeline feeds a BI tool for analytics and visualization.
+
+---
+
 # Roadmap
 
 Roadmap
 
 Planned improvements:
 
-- weather analytics dashboard
-- forecasting model for weather trends
+- weather forecasting model
 - automated data quality monitoring
