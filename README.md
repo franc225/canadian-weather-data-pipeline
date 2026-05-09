@@ -109,6 +109,7 @@ canadian-weather-data-pipeline
 │     └─ weather.duckdb
 │
 ├─ src
+│  ├─ backfill_weather_history.py
 │  ├─ config.py
 │  ├─ ingest_weather_api.py
 │  └─ load_duckdb.py
@@ -362,6 +363,36 @@ fct_weather_hourly
 
 ---
 
+# Historical Backfill
+
+The pipeline supports historical weather backfill ingestion using the Open-Meteo historical API.
+
+This functionality allows missing periods to be recovered when the pipeline has not been executed for an extended duration.
+
+Historical data is retrieved using:
+
+```text
+src/backfill_weather_history.py
+```
+
+python src/backfill_weather_history.py --start-date 2026-04-12 --end-date 2026-05-08
+
+The backfill process:
+
+- Retrieves historical weather observations
+- Stores the data as Parquet files
+- Loads the data into DuckDB
+- Rebuilds the analytical models with dbt
+
+After a historical reload, a full dbt rebuild is recommended:
+
+cd dbt_weather
+dbt build --full-refresh
+
+The incremental fact model is optimized for ongoing forecast updates, while historical backfills require a full refresh rebuild.
+
+---
+
 # Tests
 
 The project includes multiple layers of validation.
@@ -423,6 +454,7 @@ This layer demonstrates how the data engineering pipeline feeds a BI tool for an
 This project demonstrates several core data engineering practices:
 
 - API data ingestion
+- historical data backfill processing
 - Parquet-based data lake
 - DuckDB analytical warehouse
 - dimensional modeling (star schema)

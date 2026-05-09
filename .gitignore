@@ -9,3 +9,5 @@ __pycache__/
 airflow_venv/
 
 .vscode/
+
+data/raw/weather/
