@@ -134,7 +134,11 @@ canadian-weather-data-pipeline
 │  └─ check_duckdb_load.py
 │
 ├─ analytics
-│   └─ weather_dashboard.pbix
+│  ├─ weather_dashboard.pbix
+│  └─ screenshots
+│      ├─ airflow_dag_weather_pipeline.png
+│      ├─ dashboard_preview.png
+│      └─ dbt_lineage_graph.png
 |
 ├─ notebooks
 ├─ requirements.txt
@@ -315,6 +319,16 @@ Open in a browser: http://localhost:8080
 
 Enable the DAG weather_pipeline and click Trigger DAG
 
+For the best development experience, the project can be opened directly in VS Code using the WSL extension.
+
+Example:
+
+```bash
+wsl
+cd /mnt/c/dev/canadian-weather-data-pipeline
+code .
+```
+
 ---
 
 # Example Pipeline Run
@@ -360,6 +374,13 @@ stg_weather_hourly
 dim_city
 dim_date
 fct_weather_hourly
+
+Generate dbt documentation
+
+```bash
+dbt docs generate
+dbt docs serve
+```
 
 ---
 
@@ -436,8 +457,6 @@ Dashboard file:
 
 analytics/weather_dashboard.pbix
 
-![Weather Dashboard](analytics/dashboard_preview.png)
-
 The dashboard connects to the DuckDB warehouse in **read-only mode** and provides visualizations such as:
 
 - hourly temperature trends
@@ -446,6 +465,34 @@ The dashboard connects to the DuckDB warehouse in **read-only mode** and provide
 - short-term weather forecast analysis
 
 This layer demonstrates how the data engineering pipeline feeds a BI tool for analytics and visualization.
+
+Additional screenshots of the orchestration, lineage graph and analytics dashboard are available below.
+
+---
+
+# Project Screenshots
+
+## Airflow DAG
+
+Airflow orchestration of the weather pipeline.
+
+![Airflow DAG](analytics/screenshots/airflow_dag_weather_pipeline.png)
+
+---
+
+## dbt Lineage Graph
+
+dbt lineage graph showing staging and dimensional models.
+
+![dbt Lineage](analytics/screenshots/dbt_lineage_graph.png)
+
+---
+
+## Power BI Dashboard
+
+Power BI dashboard built on the DuckDB analytical warehouse.
+
+![Power BI Dashboard](analytics/screenshots/dashboard_preview.png)
 
 ---
 
