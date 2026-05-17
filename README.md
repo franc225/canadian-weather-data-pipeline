@@ -140,6 +140,9 @@ canadian-weather-data-pipeline
 │      ├─ dashboard_preview.png
 │      └─ dbt_lineage_graph.png
 |
+├─ scripts
+│  └─ run_backfill.ps1
+|
 ├─ notebooks
 ├─ requirements.txt
 └─ README.md
@@ -405,12 +408,26 @@ The backfill process:
 - Loads the data into DuckDB
 - Rebuilds the analytical models with dbt
 
-After a historical reload, a full dbt rebuild is recommended:
+For convenience, the full historical reload process can be executed with the PowerShell helper script.
 
 cd dbt_weather
 dbt build --full-refresh
 
 The incremental fact model is optimized for ongoing forecast updates, while historical backfills require a full refresh rebuild.
+
+## Automated Backfill Script
+
+A PowerShell helper script is available to run the full historical backfill process from a single command.
+
+Script location:
+
+```text
+scripts/run_backfill.ps1
+```
+
+.\scripts\run_backfill.ps1 -StartDate "2026-04-12"
+
+
 
 ---
 
